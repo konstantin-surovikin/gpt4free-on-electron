@@ -1,0 +1,53 @@
+{
+  "name": "gpt4free-on-electron",
+  "type": "module",
+  "version": "1.0.0",
+  "main": "dist/src/index.js",
+  "build": {
+    "asar": false,
+    "productName": "GPT4Free on Electron",
+    "artifactName": "gpt4free-on-electron.${ext}",
+    "files": [
+      "dist/**/*"
+    ],
+    "directories": {
+      "output": "build"
+    },
+    "appId": "com.example.ваше-приложение",
+    "linux": {
+      "icon": "assets/img/icon.png"
+    },
+    "win": {
+      "icon": "assets/img/icon.ico"
+    },
+    "mac": {
+      "icon": "assets/img/icon.icns"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@stylistic/eslint-plugin": "^3.0.0",
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
+    "electron-packager": "^17.1.2",
+    "eslint": "^9.19.0",
+    "eslint-plugin-editorconfig": "^4.0.3",
+    "gulp": "^5.0.0",
+    "gulp-chmod": "^4.0.0",
+    "gulp-copy": "^5.0.0",
+    "gulp-rename": "^2.0.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "gulp-uglify": "^3.0.2"
+  },
+  "dependencies": {
+    "globals": "^15.14.0",
+    "node-netstat": "^1.9.0",
+    "ts-patch": "^3.3.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.22.0",
+    "wait-port": "^1.1.0"
+  }
+}

@@ -1,0 +1,19 @@
+services:
+  upgrader:
+    build:
+      context: ./docker/upgrader/
+      dockerfile: Dockerfile
+    user: ${USER_ID}:${GROUP_ID}
+    command: /start.sh
+    volumes:
+      - .:/docker-host
+      - ./docker/upgrader/start.sh:/start.sh:ro
+
+  node:
+    build:
+      context: ./docker/node/
+      dockerfile: Dockerfile
+    user: ${USER_ID}:${GROUP_ID}
+    volumes:
+      - .:/app/
+    working_dir: /app/
