@@ -1,8 +1,9 @@
 (function() {
-  require('electron').ipcRenderer.once('load-storage', function (event, storage) {
+  const ipcRenderer = require('electron').ipcRenderer;
+  ipcRenderer.once('load-storage', function (event, storage) {
     for(const key in storage) {
       window.localStorage.setItem(key, storage[key]);
     }
-    location.reload();
+    ipcRenderer.send('storage-loaded');
   });
 })();

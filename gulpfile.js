@@ -29,7 +29,6 @@ gulp.task(
 gulp.task(
   'copy-server',
   () => gulp.src('./dist/server', { encoding: false })
-    // .pipe(gulp.dest(process.resourcesPath, { mode: 0o755 }))
     .pipe(gulp.dest('dist/dist', { mode: 0o755 }))
 );
 

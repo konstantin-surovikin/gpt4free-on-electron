@@ -6,6 +6,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Черный фон</title>
         <style>
+            #message {
+                font-size: 24px;
+            }
             .th-loader {
                 position: absolute;
                 top: 0;
@@ -16,21 +19,13 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                flex-direction: column;
             }
             .lds-dual-ring {
                 max-width: fit-content;
                 margin-left: auto;
                 margin-right: auto;
                 color: #1c4c5b;
-            }
-            .lds-dual-ring,
-            .lds-dual-ring:after {
-                box-sizing: border-box;
-            }
-            .lds-dual-ring {
-                display: inline-block;
-                width: 80px;
-                height: 80px;
             }
             .lds-dual-ring:after {
                 content: " ";
@@ -55,7 +50,15 @@
     </head>
     <body>
         <div class="th-loader">
+            <div id="message">Loading</div>
             <div class="lds-dual-ring"></div>
         </div>
+        <script>
+            const { ipcRenderer } = require('electron');
+            const messageBlock = document.getElementById('message');
+            ipcRenderer.on('show-message', function (event, message) {
+                messageBlock.innerHTML = message;
+            });
+        </script>
     </body>
 </html>
