@@ -25,7 +25,7 @@ export default function (severProcess: ChildProcessWithoutNullStreams): void {
       .split('\n')
       .map((line: string): string => `<p>${line}</p>`)
       .join('');
-    const asyncWindowCreation = async function () {
+    const asyncWindowCreation: () => Promise<void> = async function () {
       const window: WindowLoadsInterface = await windowPromise;
       await window.errorPage();
       window.setTitle('Error');

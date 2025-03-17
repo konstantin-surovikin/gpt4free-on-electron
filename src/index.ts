@@ -12,6 +12,8 @@ import skip from './lib/skip.js';
 import t from './entrypoint/i18n.js';
 import waitPort from 'wait-port';
 
+const isDaemon: boolean = process.argv.includes('--daemon');
+
 fs.appendFileSync(conversationsPath, new Uint8Array());
 app.setPath('appData', temporaryDirectory);
 app.setName('gpt4free-on-electron');
@@ -28,7 +30,12 @@ if (process.platform !== 'darwin') {
 }
 
 async function main(): Promise<void> {
-  const window: WindowLoadsInterface = await createWindowLoads();
+  const window: WindowLoadsInterface = await createWindowLoads({
+    show: !isDaemon,
+  });
+  app.on('second-instance', function (): void {
+    window.window.show();
+  });
   await window.loadingPage();
   window.window.on('close', (): void => app.quit());
   window.window.on('page-title-updated', function (event: ElectronEvent): void {
@@ -65,12 +72,12 @@ async function main(): Promise<void> {
 
   await window.goto(url);
   window.window.on('focus', function (): void {
-    window.appendJsFile('focusMessageInput.js').catch(skip);
+    window.appendJsFile<void>('focusMessageInput.js').catch(skip);
   });
-  await window.appendJsFile('focusMessageInput.js');
-  await window.appendJsFile('removeVersionWindow.js');
-  await window.appendJsFile('methodsWrapper.js');
-  await window.appendJsFile('watchStorage.js');
+  await window.appendJsFile<void>('focusMessageInput.js');
+  await window.appendJsFile<void>('removeVersionWindow.js');
+  await window.appendJsFile<void>('methodsWrapper.js');
+  await window.appendJsFile<void>('watchStorage.js');
 }
 
 main()

@@ -1,23 +1,35 @@
 import { BrowserWindow, app, shell } from 'electron';
 import type {
+  BrowserWindowConstructorOptions,
   HandlerDetails,
   WebContents,
   WindowOpenHandlerResponse,
 } from 'electron';
-import { imageAssets, viewPath } from './paths.js';
-import { appendJsFile } from './appendJsFile.js';
+import { imageAssets, javascriptAssets, viewPath } from './paths.js';
+import fs from 'fs';
 import path from 'path';
 import skip from './skip.js';
 
-const quit = app.quit.bind(app);
+const decoder: TextDecoder = new TextDecoder('UTF-8');
+function appendJsFile<T>(window: BrowserWindow, filename: string): Promise<T> {
+  return window.webContents.executeJavaScript(
+    decoder.decode(fs.readFileSync(path.join(javascriptAssets, filename))),
+  );
+}
+
+const quit: () => void = app.quit.bind(app);
+function whenClosed(window: BrowserWindow): Promise<void> {
+  return new Promise<void>(function (resolve: () => void): void {
+    window.on('close', resolve);
+  });
+}
 
 class WindowLoads {
+  public readonly stoppedGracefully: Promise<void>;
+
   constructor(public readonly window: BrowserWindow) {
+    this.stoppedGracefully = Promise.race([whenClosed(window)]);
     const webContents: WebContents = window.webContents;
-    app.on('second-instance', function (): void {
-      window.restore();
-      window.focus();
-    });
     webContents.setWindowOpenHandler(function ({
       url,
     }: HandlerDetails): WindowOpenHandlerResponse {
@@ -27,24 +39,40 @@ class WindowLoads {
     });
   }
 
-  loadingPage() {
-    return this.window
-      .off('closed', quit)
-      .loadFile(path.join(viewPath, 'load.html'));
+  loadingPage(): Promise<void> {
+    return Promise.race([
+      this.stoppedGracefully,
+      this.window
+        .off('closed', quit)
+        .loadFile(path.join(viewPath, 'load.html')),
+    ]);
   }
 
-  errorPage() {
-    return this.window
-      .once('closed', quit)
-      .loadFile(path.join(viewPath, 'error.html'));
+  errorPage(): Promise<void> {
+    return Promise.race([
+      this.stoppedGracefully,
+      this.window
+        .once('closed', quit)
+        .loadFile(path.join(viewPath, 'error.html')),
+    ]);
   }
 
   async goto(url: string): Promise<void> {
-    return this.window.off('closed', quit).loadURL(url);
+    return Promise.race([
+      this.stoppedGracefully,
+      this.window.off('closed', quit).loadURL(url),
+    ]);
   }
 
-  appendJsFile<T>(filename: string): Promise<T> {
-    return appendJsFile<T>(this.window.webContents, filename);
+  async close(): Promise<void> {
+    return Promise.race([this.stoppedGracefully, this.window.close()]);
+  }
+
+  appendJsFile<T>(filename: string): Promise<T | undefined> {
+    return Promise.race([
+      this.stoppedGracefully.then((): undefined => undefined),
+      appendJsFile<T>(this.window, filename),
+    ]);
   }
 
   setTitle(title: string): void {
@@ -57,11 +85,14 @@ class WindowLoads {
 }
 
 export type WindowLoadsInterface = WindowLoads;
-export async function createWindowLoads(): Promise<WindowLoadsInterface> {
+export async function createWindowLoads(
+  windowOptions: BrowserWindowConstructorOptions = {},
+): Promise<WindowLoadsInterface> {
   return app.whenReady().then(
     (): WindowLoadsInterface =>
       new WindowLoads(
         new BrowserWindow({
+          ...windowOptions,
           icon: path.join(imageAssets, 'icon.png'),
           webPreferences: {
             devTools: ['dev', 'devel', 'development'].includes(
