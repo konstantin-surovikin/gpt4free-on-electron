@@ -13,7 +13,6 @@
     "directories": {
       "output": "build"
     },
-    "appId": "com.example.ваше-приложение",
     "linux": {
       "icon": "assets/img/icon.png"
     },
@@ -27,20 +26,26 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "scripts": {
+    "format": "prettier --write 'src/**/*.ts'",
+    "lint": "eslint 'src/**/*.ts' --fix"
+  },
   "description": "",
   "devDependencies": {
-    "@stylistic/eslint-plugin": "^3.0.0",
-    "electron": "^33.3.1",
-    "electron-builder": "^25.1.8",
-    "electron-packager": "^17.1.2",
-    "eslint": "^9.19.0",
-    "eslint-plugin-editorconfig": "^4.0.3",
     "gulp": "^5.0.0",
     "gulp-chmod": "^4.0.0",
     "gulp-copy": "^5.0.0",
     "gulp-rename": "^2.0.0",
     "gulp-typescript": "^6.0.0-alpha.1",
-    "gulp-uglify": "^3.0.2"
+    "gulp-uglify": "^3.0.2",
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
+    "electron-packager": "^17.1.2",
+    "eslint": "^9.19.0",
+    "@eslint/js": "^9.20.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "typescript-eslint": "^8.20.0"
   },
   "dependencies": {
     "globals": "^15.14.0",

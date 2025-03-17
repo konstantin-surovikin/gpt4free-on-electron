@@ -6,7 +6,9 @@ import type { WindowLoadsInterface } from './lib/WindowLoads.js';
 import createServer from './createGpt4FreeServer.js';
 import { createWindowLoads } from './lib/WindowLoads.js';
 import fs from 'fs';
+import handleChildProcessErrors from './lib/handleChildProcessErrors.js';
 import loadConversations from './loadConversations.js';
+import skip from './lib/skip.js';
 import t from './entrypoint/i18n.js';
 import waitPort from 'wait-port';
 
@@ -28,7 +30,8 @@ if (process.platform !== 'darwin') {
 async function main(): Promise<void> {
   const window: WindowLoadsInterface = await createWindowLoads();
   await window.loadingPage();
-  window.window.on('page-title-updated', function(event: ElectronEvent): void {
+  window.window.on('close', (): void => app.quit());
+  window.window.on('page-title-updated', function (event: ElectronEvent): void {
     event.preventDefault();
     window.setTitle('ChatGPT4Free');
   });
@@ -37,6 +40,7 @@ async function main(): Promise<void> {
 
   const host: string = 'localhost';
   const { executionPromise, port, severProcess } = await createServer();
+  handleChildProcessErrors(severProcess);
   const url: string = `http://${host}:${port}/chat/`;
   info(t(LoadStages.FOUND_PORT));
 
@@ -55,29 +59,28 @@ async function main(): Promise<void> {
   ipcMain.on(
     'storage-changed',
     (event: ElectronEvent, localStorage: any): void => {
-      fs.writeFileSync(
-        conversationsPath,
-        JSON.stringify(localStorage)
-      );
-    }
+      fs.writeFileSync(conversationsPath, JSON.stringify(localStorage));
+    },
   );
 
   await window.goto(url);
-  window.window.on('focus', (): Promise<void> => window.appendJsFile( 'focusMessageInput.js' ));
-  await window.appendJsFile( 'focusMessageInput.js' );
-  await window.appendJsFile( 'removeVersionWindow.js' );
-  await window.appendJsFile( 'methodsWrapper.js' );
-  await window.appendJsFile( 'watchStorage.js' );
+  window.window.on('focus', function (): void {
+    window.appendJsFile('focusMessageInput.js').catch(skip);
+  });
+  await window.appendJsFile('focusMessageInput.js');
+  await window.appendJsFile('removeVersionWindow.js');
+  await window.appendJsFile('methodsWrapper.js');
+  await window.appendJsFile('watchStorage.js');
 }
 
 main()
-  .catch(async function(message: string) {
+  .catch(async function (message: string) {
     const window: WindowLoadsInterface = await createWindowLoads();
     await window.errorPage();
     window.setTitle('Error');
     window.showMessage(message);
   })
-  .catch(function(error: Error): never {
+  .catch(function (error: Error): never {
     console.log(error);
     process.exit();
   });

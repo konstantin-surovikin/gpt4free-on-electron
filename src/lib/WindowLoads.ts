@@ -1,22 +1,27 @@
 import { BrowserWindow, app, shell } from 'electron';
-import type { HandlerDetails, WebContents, WindowOpenHandlerResponse } from 'electron';
+import type {
+  HandlerDetails,
+  WebContents,
+  WindowOpenHandlerResponse,
+} from 'electron';
 import { imageAssets, viewPath } from './paths.js';
 import { appendJsFile } from './appendJsFile.js';
 import path from 'path';
+import skip from './skip.js';
 
 const quit = app.quit.bind(app);
 
 class WindowLoads {
-  constructor(
-    public readonly window: BrowserWindow
-  ) {
+  constructor(public readonly window: BrowserWindow) {
     const webContents: WebContents = window.webContents;
-    app.on('second-instance', function(): void {
+    app.on('second-instance', function (): void {
       window.restore();
       window.focus();
     });
-    webContents.setWindowOpenHandler(function ({ url }: HandlerDetails): WindowOpenHandlerResponse {
-      shell.openExternal(url);
+    webContents.setWindowOpenHandler(function ({
+      url,
+    }: HandlerDetails): WindowOpenHandlerResponse {
+      shell.openExternal(url).catch(skip);
 
       return { action: 'deny' };
     });
@@ -35,9 +40,7 @@ class WindowLoads {
   }
 
   async goto(url: string): Promise<void> {
-    return this.window
-      .off('closed', quit)
-      .loadURL(url);
+    return this.window.off('closed', quit).loadURL(url);
   }
 
   appendJsFile<T>(filename: string): Promise<T> {
@@ -55,15 +58,19 @@ class WindowLoads {
 
 export type WindowLoadsInterface = WindowLoads;
 export async function createWindowLoads(): Promise<WindowLoadsInterface> {
-  return app
-    .whenReady()
-    .then((): WindowLoadsInterface => new WindowLoads(
-      new BrowserWindow({
-        icon: path.join(imageAssets, 'icon.png'),
-        webPreferences: {
-          contextIsolation: false,
-          nodeIntegration: true
-        }
-      })
-    ));
+  return app.whenReady().then(
+    (): WindowLoadsInterface =>
+      new WindowLoads(
+        new BrowserWindow({
+          icon: path.join(imageAssets, 'icon.png'),
+          webPreferences: {
+            devTools: ['dev', 'devel', 'development'].includes(
+              process.env.NODE_ENVIRONMENT ?? '',
+            ),
+            contextIsolation: false,
+            nodeIntegration: true,
+          },
+        }),
+      ),
+  );
 }
