@@ -1,3 +1,3 @@
 (function() {
-  document.getElementById('message-input').focus();
+  document.getElementById('userInput')?.focus();
 })();

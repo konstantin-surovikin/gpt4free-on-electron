@@ -8,7 +8,23 @@
         <style>
             #message {
                 font-size: 24px;
+                opacity: 1;
+                transition: all 0.3s ease-out;
+                transform: translateX(0);
             }
+
+            #message.leaving {
+                opacity: 0.5;
+                transition: all 0.3s ease-in;
+                transform: translateX(100%);
+            }
+
+            #message.entering {
+                opacity: 0.5;
+                transition: all 0.3s ease-out;
+                transform: translateX(-100%);
+            }
+
             .th-loader {
                 position: absolute;
                 top: 0;
@@ -21,12 +37,14 @@
                 justify-content: center;
                 flex-direction: column;
             }
+
             .lds-dual-ring {
                 max-width: fit-content;
                 margin-left: auto;
                 margin-right: auto;
                 color: #1c4c5b;
             }
+
             .lds-dual-ring:after {
                 content: " ";
                 display: block;
@@ -38,6 +56,7 @@
                 border-color: currentColor transparent currentColor transparent;
                 animation: lds-dual-ring 1.2s linear infinite;
             }
+
             @keyframes lds-dual-ring {
                 0% {
                     transform: rotate(0deg);
@@ -54,11 +73,29 @@
             <div class="lds-dual-ring"></div>
         </div>
         <script>
-            const { ipcRenderer } = require('electron');
-            const messageBlock = document.getElementById('message');
-            ipcRenderer.on('show-message', function (event, message) {
-                messageBlock.innerHTML = message;
-            });
+        const { ipcRenderer } = require('electron');
+        const messageBlock = document.getElementById('message');
+        const afterTransition = function() {
+          return new Promise(function(resolve) {
+            const transitionend = function() {
+              messageBlock.removeEventListener('transitionend', transitionend);
+              resolve();
+            };
+            messageBlock.addEventListener('transitionend', transitionend);
+          });
+        };
+        ipcRenderer.on('show-message', async function (event, message) {
+          messageBlock.classList.add('leaving');
+          await afterTransition();
+          messageBlock.innerHTML = '&nbsp;';
+          messageBlock.classList.remove('leaving');
+          await afterTransition();
+          messageBlock.classList.add('entering');
+          await afterTransition();
+          messageBlock.innerHTML = message;
+          messageBlock.classList.remove('entering');
+          await afterTransition();
+        });
         </script>
     </body>
 </html>

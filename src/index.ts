@@ -65,17 +65,18 @@ async function main(): Promise<void> {
 
   ipcMain.on(
     'storage-changed',
-    (event: ElectronEvent, localStorage: any): void => {
+    function (event: ElectronEvent, localStorage: any): void {
       fs.writeFileSync(conversationsPath, JSON.stringify(localStorage));
     },
   );
 
   await window.goto(url);
+  await window.appendJsFile<void>('autoselectMobileVersion.js').catch(skip);
   window.window.on('focus', function (): void {
     window.appendJsFile<void>('focusMessageInput.js').catch(skip);
   });
-  await window.appendJsFile<void>('focusMessageInput.js');
-  await window.appendJsFile<void>('removeVersionWindow.js');
+  await window.appendJsFile<void>('focusMessageInput.js').catch(skip);
+  await window.appendJsFile<void>('removeVersionWindow.js').catch(skip);
   await window.appendJsFile<void>('methodsWrapper.js');
   await window.appendJsFile<void>('watchStorage.js');
 }
